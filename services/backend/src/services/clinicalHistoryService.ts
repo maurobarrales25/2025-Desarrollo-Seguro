@@ -130,7 +130,7 @@ class ClinicalHistoryService {
       .first();
     if (!f) throw new Error('File not found');
 
-    try { await unlink(path.resolve(f.path)); } catch {}
+    try { await unlink(path.resolve(f.path)); } catch {}       // MEGA PATH
     await db('clinical_history_files').where({ id: f.id }).delete();
   }
 }

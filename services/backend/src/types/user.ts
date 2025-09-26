@@ -1,6 +1,6 @@
 export interface User {
-  id?: string;
-  username?: string;
+  id?: number;        //cambio a number
+  username?: string;  
   email: string;
   password: string;
   first_name: string;
@@ -8,7 +8,7 @@ export interface User {
 }
 
 export interface UserRow {
-  id: string;
+  id: number;       //cambio a number
   username: string;
   email: string;
   password: string;

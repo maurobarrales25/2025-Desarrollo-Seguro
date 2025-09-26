@@ -19,8 +19,8 @@ describe('Auth Routes', () => {
     });
 
     it('/login', async () => {
-        const jwtSecret = jwtUtils.generateToken('1');
-        mockedAuthService.authenticate.mockResolvedValue({ id: '1', username: 'testuser' } as any);
+        const jwtSecret = jwtUtils.generateToken(1);    //Cambio a numero
+        mockedAuthService.authenticate.mockResolvedValue({ id: 1, username: 'testuser' } as any);   //Cambio a numero
         mockedAuthService.generateJwt.mockReturnValue(jwtSecret);
 
         const response = await request(app)

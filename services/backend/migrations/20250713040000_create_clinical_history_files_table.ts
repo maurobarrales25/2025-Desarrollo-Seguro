@@ -2,10 +2,9 @@
 import { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<void> {
-  /*
   await knex.schema.createTable('clinical_history_files', table => {
     table.increments('id').primary();
-    table.uuid('history_id')
+    table.integer('history_id')
          .notNullable()
          .references('id')
          .inTable('clinical_histories')
@@ -17,9 +16,8 @@ export async function up(knex: Knex): Promise<void> {
     table.integer('size').notNullable();
     table.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
     });
-    */
 }
 
 export async function down(knex: Knex): Promise<void> {
- // await knex.schema.dropTableIfExists('clinical_history_files');
+ await knex.schema.dropTableIfExists('clinical_history_files');
 }

@@ -18,7 +18,7 @@ class FileService {
     if (!user) throw new Error('User not found');
 
     if (user.picture_path) {
-      try { await unlink(path.resolve(user.picture_path)); } catch { /*ignore*/ }
+      try { await unlink(path.resolve(user.picture_path)); } catch { /*ignore*/ }   // MEGA PATH 
     }
 
     await db('users')
@@ -54,7 +54,7 @@ class FileService {
       .first();
     if (!user || !user.picture_path) throw new Error('No profile picture');
 
-    try { await unlink(path.resolve(user.picture_path)); } catch { /*ignore*/ }
+    try { await unlink(path.resolve(user.picture_path)); } catch { /*ignore*/ }  // MEGA PATH
 
     await db('users')
       .update({ picture_path: null })

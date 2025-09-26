@@ -6,17 +6,22 @@ import { promises as fs } from 'fs';
 import * as path from 'path';
 
 interface InvoiceRow {
-  id: string;
-  userId: string;
+  id: number; // cambio a number
+  userId: number; // cambio a number
   amount: number;
   dueDate: Date;
   status: string;
 }
 
+//UTilizamos path.resolve para tener la ruta absoulta, para que no pueda salir del directorio
+//actual
+const INVOICES_DIRECTORY = path.resolve(__dirname, '..', '..', 'invoices_data'); 
+
+
 class InvoiceService {
-  static async list( userId: string, status?: string, operator?: string): Promise<Invoice[]> {
+  static async list( userId: number, status?: string, operator?: string): Promise<Invoice[]> {
     let q = db<InvoiceRow>('invoices').where({ userId: userId });
-    if (status) q = q.andWhereRaw(" status "+ operator + " '"+ status +"'");
+    if (status) q = q.andWhereRaw(" status "+ operator + " '"+ status +"'");                    // sql injection
     const rows = await q.select();
     const invoices = rows.map(row => ({
       id: row.id,
@@ -29,8 +34,8 @@ class InvoiceService {
   }
 
   static async setPaymentCard(
-    userId: string,
-    invoiceId: string,
+    userId: number, // cambio a number
+    invoiceId: number,  // cambio a number
     paymentBrand: string,
     ccNumber: string,
     ccv: string,
@@ -39,7 +44,7 @@ class InvoiceService {
     // use axios to call http://paymentBrand/payments as a POST request
     // with the body containing ccNumber, ccv, expirationDate
     // and handle the response accordingly
-    const paymentResponse = await axios.post(`http://${paymentBrand}/payments`, {
+    const paymentResponse = await axios.post(`http://${paymentBrand}/payments`, {   //SSRF
       ccNumber,
       ccv,
       expirationDate
@@ -53,8 +58,9 @@ class InvoiceService {
       .where({ id: invoiceId, userId })
       .update({ status: 'paid' });  
     };
-  static async  getInvoice( invoiceId:string): Promise<Invoice> {
-    const invoice = await db<InvoiceRow>('invoices').where({ id: invoiceId }).first();
+
+  static async  getInvoice( invoiceId:number, userId: number): Promise<Invoice> {   // cambio a number
+    const invoice = await db<InvoiceRow>('invoices').where({ id: invoiceId, userId: userId }).first();
     if (!invoice) {
       throw new Error('Invoice not found');
     }
@@ -63,17 +69,24 @@ class InvoiceService {
 
 
   static async getReceipt(
-    invoiceId: string,
-    pdfName: string
+    invoiceId: number,   // cambio a number
+    pdfName: string,
+    userId: number
   ) {
     // check if the invoice exists
-    const invoice = await db<InvoiceRow>('invoices').where({ id: invoiceId }).first();
+    const invoice = await db<InvoiceRow>('invoices').where({id: invoiceId, userId: userId}).first();
     if (!invoice) {
-      throw new Error('Invoice not found');
+      throw new Error('Factura no encontrada o usuario  no autorizado'); //Aviso de error
     }
+
+    const requestFilePath = path.join(INVOICES_DIRECTORY, pdfName)
+
+    if (!requestFilePath.startsWith(INVOICES_DIRECTORY)) {
+      throw new Error('Error, no puede acceder fuera del directorio predeterminado'); // Aviso de error
+    }
+
     try {
-      const filePath = `/invoices/${pdfName}`;
-      const content = await fs.readFile(filePath, 'utf-8');
+      const content = await fs.readFile(requestFilePath, 'utf-8');  //fix para la vulnerabilidad
       return content;
     } catch (error) {
       // send the error to the standard output

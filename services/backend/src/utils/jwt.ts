@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 
-const generateToken = (userId: string) => {
+const generateToken = (userId: number) => {   // cambio a number
   return jwt.sign(
     { id: userId }, 
     "secreto_super_seguro", 

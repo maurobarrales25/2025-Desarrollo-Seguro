@@ -76,9 +76,9 @@ class AuthService {
     return existing;
   }
 
-  static async authenticate(username: string, password: string) {
+  static async authenticate(email: string, password: string) {    // cambio de email
     const user = await db<UserRow>('users')
-      .where({ username })
+      .where({ email })                     // cambio a email
       .andWhere('activated', true)
       .first();
     if (!user) throw new Error('Invalid email or not activated');
@@ -153,7 +153,7 @@ class AuthService {
       .where({ id: row.id });
   }
 
-  static generateJwt(userId: string): string {
+  static generateJwt(userId: number): string {
     return jwtUtils.generateToken(userId);
   }
 }

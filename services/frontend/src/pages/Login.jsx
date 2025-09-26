@@ -15,7 +15,7 @@ export default function Login() {
     try {
       const res = await api.post('/auth/login', creds);
 
-      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('token', res.data.token);    //jwt_token agregado
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');

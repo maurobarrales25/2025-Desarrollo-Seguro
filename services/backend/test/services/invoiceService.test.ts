@@ -21,12 +21,12 @@ describe('AuthService.generateJwt', () => {
   });
 
   it('listInvoices', async () => {
-    const userId = 'user123';
+    const userId = 5555;         //cambio de string a nuemero'user-123';
     const state = 'paid';
     const operator = 'eq';
     const mockInvoices: Invoice[] = [
-      { id: 'inv1', userId, amount: 100, dueDate: new Date(), status: 'paid' },
-      { id: 'inv2', userId, amount: 200, dueDate: new Date(), status: 'paid' }
+      { id: 1, userId, amount: 100, dueDate: new Date(), status: 'paid' },  //cambio de string a number para los Ids
+      { id: 2, userId, amount: 200, dueDate: new Date(), status: 'paid' }
     ];
     // mock no user exists
     const selectChain = {
@@ -45,10 +45,10 @@ describe('AuthService.generateJwt', () => {
   });
 
   it('listInvoices no state', async () => {
-    const userId = 'user123';
+    const userId = 5555;         //cambio de string a nuemero'user-123';
     const mockInvoices: Invoice[] = [
-      { id: 'inv1', userId, amount: 100, dueDate: new Date(), status: 'paid' },
-      { id: 'inv2', userId, amount: 200, dueDate: new Date(), status: 'unpaid' }
+      { id: 2, userId, amount: 100, dueDate: new Date(), status: 'paid' },  //cambio de string a number para los Ids
+      { id: 3, userId, amount: 200, dueDate: new Date(), status: 'unpaid' }
     ];
     // mock no user exists
     const selectChain = {
