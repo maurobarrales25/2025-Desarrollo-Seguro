@@ -5,6 +5,8 @@ import AuthService from '../../src/services/authService';
 import db from '../../src/db';
 import { User } from '../../src/types/user';
 
+import config from '../../src/config';
+
 jest.mock('../../src/db')
 const mockedDb = db as jest.MockedFunction<typeof db>
 
@@ -344,7 +346,7 @@ describe('AuthService.generateJwt', () => {
     expect(token.length).toBeGreaterThan(0);
 
     // verify the token decodes to our payload
-    const decoded = jwt.verify(token,"secreto_super_seguro");
+    const decoded = jwt.verify(token, config.jwt.secret);
     expect((decoded as any).id).toBe(userId);
   });
 
