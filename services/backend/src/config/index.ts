@@ -7,7 +7,6 @@ const config = {
   jwt: {
     secret: process.env.JWT_SECRET,
   }
-  // Aquí podrías agregar más configuraciones en el futuro
 };
 
 // --- Validación ---

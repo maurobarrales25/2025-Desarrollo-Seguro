@@ -18,6 +18,14 @@ interface InvoiceRow {
 const INVOICES_DIRECTORY = path.resolve(__dirname, '..', '..', 'invoices_data'); 
 
 
+// 1. Se define la "Lista Blanca" (Allowlist) de destinos permitidos.
+// Solo se aceptarán estas marcas de tarjeta.
+const PAYMENT_GATEWAY_URLS: { [key: string]: string } = {
+  'visa': 'http://visa-payments.internal-api/pay',
+  'master': 'http://mastercard.internal-api/charge',
+  'amex': 'http://amex-gateway.internal-api/process'
+};
+
 class InvoiceService {
   static async list( userId: number, status?: string, operator?: string): Promise<Invoice[]> {
     let q = db<InvoiceRow>('invoices').where({ userId: userId });
@@ -41,14 +49,23 @@ class InvoiceService {
     ccv: string,
     expirationDate: string
   ) {
-    // use axios to call http://paymentBrand/payments as a POST request
-    // with the body containing ccNumber, ccv, expirationDate
-    // and handle the response accordingly
-    const paymentResponse = await axios.post(`http://${paymentBrand}/payments`, {   //SSRF
+
+    // Se busca la URL en la lista segura usando la entrada del usuario como clave.
+    const url = PAYMENT_GATEWAY_URLS[paymentBrand];
+
+    // Se valida. Si 'paymentBrand' no estaba en la lista, la URL será 'undefined'
+    //    y se rechazará la petición inmediatamente.
+    if (!url) {
+      throw new Error('Marca de tarjeta inválida');
+    }
+
+    // 4. Solo si la URL es válida y segura, se procede con la llamada de red.
+    const paymentResponse = await axios.post(url, { // <-- SEGURO
       ccNumber,
       ccv,
       expirationDate
     });
+
     if (paymentResponse.status !== 200) {
       throw new Error('Payment failed');
     }
