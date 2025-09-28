@@ -5,7 +5,10 @@ dotenv.config();
 
 const config = {
   jwt: {
-    secret: process.env.JWT_SECRET,
+    secret: process.env.JWT_SECRET as string,
+  },
+  frontend: {
+    url: process.env.FRONTEND_URL as string
   }
 };
 
@@ -14,6 +17,9 @@ const config = {
 // Esto previene errores de seguridad en producción.
 if (!config.jwt.secret) {
   throw new Error('FATAL ERROR: JWT_SECRET no está definido en el entorno.');
+}
+if (!config.frontend.url) {
+  throw new Error('FATAL ERROR: FRONTEND_URL no está definida en el entorno.');
 }
 
 export default config;

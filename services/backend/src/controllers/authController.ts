@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import AuthService from '../services/authService';
 import { User } from '../types/user';
+import config from '../config';
 
 
 const ping = async (req: Request, res: Response, next: NextFunction) => {
@@ -26,7 +27,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
 const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
   const { email } = req.body;
   try {
-    await AuthService.sendResetPasswordEmail(email);
+    await AuthService.sendResetPasswordEmail(email, config.frontend.url);
     // 204: no content, but client knows email was sent
     res.sendStatus(204);
   } catch (err) {

@@ -214,7 +214,7 @@ describe('AuthService.generateJwt', () => {
       .mockReturnValueOnce(getUserChain as any)
       .mockReturnValueOnce(updateChain as any); 
     // Call the method to test
-    await AuthService.sendResetPasswordEmail(email);
+    await AuthService.sendResetPasswordEmail(email,'http://fake-frontend.com');
     expect(getUserChain.where).toHaveBeenCalledWith({ email });
     expect(updateChain.update).toHaveBeenCalledWith({
       reset_password_token: expect.any(String),
@@ -240,7 +240,7 @@ describe('AuthService.generateJwt', () => {
       .mockReturnValueOnce(getUserChain as any);
 
     // Call the method to test
-    await expect(AuthService.sendResetPasswordEmail('a@a.com')).rejects.toThrow('No user with that email or not activated');
+    await expect(AuthService.sendResetPasswordEmail('a@a.com','http://fake-frontend.com')).rejects.toThrow('No user with that email or not activated');
   });
 
   it('resetPassword', async () => {
