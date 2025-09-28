@@ -10,7 +10,9 @@ Varias de estas vulnerabilidades se explotaron utilizando el user Test, que tien
 
 En la función getReceipt que se encuentra en invoiceService, los parámetros status y operator se concatenan directamente en la consulta de SQL. Esto es una vulnerabilidad ya que un atacante puede inyectar código de SQL malicioso.
 
-**Componente afectado:** `services/backend/src/services/invoiceService.ts`
+**Componente afectado:** 
+
+`services/backend/src/services/invoiceService.ts`
 
 **Parametro afectado:** let q
 
@@ -78,6 +80,7 @@ Siguiendo los siguientes pasos se puede reproducir la vulnerabilidad:
 ## 3 - Server Side Request Fogery - SSRF
 
 **Justificación**
+
 En el invoiceService, la función setPaymentCard construye una URL usando el parámetro paymentBrand que le envía el usuario. Esto es una vulnerabilidad ya que un atacante puede usar esto para hacer que el servidor realice peticiones a otros servicios dentro de la red interna
 
 **Componente Afectado:** `services/backend/src/services/invoiceService.ts`
@@ -96,6 +99,7 @@ En el invoiceService, la función setPaymentCard construye una URL usando el par
 ```
 
 **PoC**
+
 Siguiendo los siguientes pasos se puede reproducir la vulnerabilidad:
 
 1. Abrir una terminal y ejecutar el siguiente comando. Esté comando lo que hace es poner a escuchar a nuestro servidor malicioso :`nc -lvp 9090`
@@ -119,9 +123,11 @@ Siguiendo los siguientes pasos se puede reproducir la vulnerabilidad:
 ## 4 - Path Traversal
 
 **Justificación**
+
 La funcionalidad para descargar archivos no valida correctamente la ruta del archivo, lo que hace que esté permitido el uso de caracteres como ../. Esto es una vulnerabilidad ya que el atacante puede navegar por distintas partes del directorio y puede llegar a leer archivos de configuración sensibles o archivos del sistema operativo.
 
 **Componentes afectados:** 
+
 `src/controllers/invoiceController.ts → getInvoicePDF`
 
 `src/services/invoiceService.ts → InvoiceService.getReceipt`
@@ -154,6 +160,7 @@ static async getReceipt(
 ```
 
 **PoC**
+
 Siguiendo los siguientes pasos se puede reproducir la vulnerabilidad:
 
 1. En Postman hacer el siguiente request:
@@ -211,13 +218,14 @@ static async getReceipt(
 Los endpoints que devuelven las facturas no verifican que el usuario autenticado sea el propietario de las facturas. Se permite buscar facturas sólo filtrando por invoiceId, permitiendo a otros usuarios acceder a facturas ajenas. 
 
 **Componentes afectados**
-src/routes/invoices.routes — rutas sin protección de autenticación
 
-src/controllers/invoiceController.getInvoicePDF — no válida propiedad
+`src/routes/invoices.routes — rutas sin protección de autenticación`
 
-src/services/invoiceService.getReceipt — no valida propiedad
+`src/controllers/invoiceController.getInvoicePDF — no válida propiedad`
 
-src/services/invoiceService.getInvoice — consultas inseguras que no incluyen userId
+`src/services/invoiceService.getReceipt — no valida propiedad`
+
+`src/services/invoiceService.getInvoice — consultas inseguras que no incluyen userId`
 
 **Endpoints inseguros**
 
@@ -232,6 +240,7 @@ router.get('/:id/invoice', routes.getInvoicePDF);
 ```
 
 **PoC**
+
 Tabla de Invoices:
 
 ```bash
@@ -317,12 +326,15 @@ La vulnerabilidad sucede porque se guardan las contrasenas en texto plano en la 
 Además en el endpoint `auth/login` cuando el usuario ingresa sus credenciales, el endpoint devuelve en la respuesta su contrasena. 
 
 **Componente afecado:**
+
 `src/routes/auth.routes.ts`
 
 **Endpoint afectado**
+
 `http://localhost:5000/auth/login`
 
 **PoC**
+
 En postman hacer una solicitud `POST`
 `http://localhost:5000/auth/login` mandar el siguiente body:
 ```json
@@ -335,6 +347,7 @@ Respuesta:
 
 
 **Fix** 
+
 En `authService` se importo la librería de bcrypt para hasear las contrasenas.
 
 En la variable `SALT_ROUNDS` ponemos la cantidad de veces que se debe pasar por la función hash = 10. 
