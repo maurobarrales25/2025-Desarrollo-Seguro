@@ -205,3 +205,164 @@ static async getReceipt(
       throw new Error('Receipt not found');
     } 
 ```
+
+## 5 - Missing Authorization
+
+Los endpoints que devuelven las facturas no verifican que el usuario autenticado sea el propietario de las facturas. Se permite buscar facturas sólo filtrando por invoiceId, permitiendo a otros usuarios acceder a facturas ajenas. 
+
+**Componentes afectados**
+src/routes/invoices.routes — rutas sin protección de autenticación
+
+src/controllers/invoiceController.getInvoicePDF — no válida propiedad
+
+src/services/invoiceService.getReceipt — no valida propiedad
+
+src/services/invoiceService.getInvoice — consultas inseguras que no incluyen userId
+
+**Endpoints inseguros**
+
+```typescript
+//GET /invoices
+router.get('/', routes.listInvoices);`
+// GET /invoices/:id
+router.get('/:id', routes.getInvoice);
+// POST /invoices/:id/pay
+router.post('/:id/pay', routes.setPaymentCard);
+router.get('/:id/invoice', routes.getInvoicePDF);
+```
+
+**PoC**
+Tabla de Invoices:
+
+```bash
+SELECT * FROM invoices;
+
+ id | userId | amount |  dueDate   | status 
+----+--------+--------+------------+--------
+  1 |      1 | 101.00 | 2025-01-01 | unpaid
+  2 |      1 | 102.00 | 2025-01-01 | paid
+  3 |      1 | 103.00 | 2025-01-01 | paid
+  4 |      2 |  99.00 | 2025-01-01 | unpaid
+```
+
+Un usuario autenticado con userId 1 hace el siguiente request: 
+
+`GET http://localhost:5000/inovices/4` y obtiene la siguiente respuessta:
+```json
+{
+  "id": 4,
+  "userId": 2,
+  "amount": "99.00",
+  "dueDate": "2025-01-01T00:00:00.000Z",
+  "status": "unpaid"
+}
+```
+Esto demuestra la vulnerabilidad ya que el usuario que realiza el request tiene el userId:1 y puede ver la invoice 4 que pertenece a userId:2
+
+**Fix**
+
+1. **Requerir autenticación en las rutas:** Agregar el `authenticateJWT` en las rutas para asegurar que siempre tengamos el userId del usuario autenticado
+```typescript
+// se agrega authenticateJWT
+// GET /invoices
+router.get('/', authenticateJWT, routes.listInvoices);
+// GET /invoices
+router.get('/:id', authenticateJWT, routes.getInvoice);
+// POST /invoices/:id/pay
+router.get('/:id/invoice', authenticateJWT, routes.getInvoicePDF);
+router.post('/:id/pay', authenticateJWT, routes.setPaymentCard);
+```
+2. **Verificar userId en las consulta del Service:** Cuando se busque una factura, incluir el userId en la condición para asegurar que el recurso perteneza al usuario autenticado. 
+
+```typescript
+ static async  getInvoice( invoiceId:number, userId: number): Promise<Invoice> {   // cambio a number
+    const invoice = await db<InvoiceRow>('invoices').where({ id: invoiceId, userId: userId }).first();
+    if (!invoice) {
+      throw new Error('Invoice not found');
+    }
+    return invoice as Invoice;
+  }
+```
+
+**Prueba en Postman post fix**
+
+`GET http://localhost:5000/inovices/4`
+
+```json
+{
+  "message": "Invoice not found"
+}
+```
+
+## 6 - Server-Side Template Injection
+
+La vulnerabilidad se encuentra `authService`en el método `createUser`. Se usa `${user.first_name} ${user.last_name}` y se  pasa ese string que tiene los datos del usuario a `ejs.render(template)`. Si en la función `ejs.render()` un atacante puede inyectar código EJS valido en los campos `first_name` o `last_name`, la función ejecuta el código en el servidor antes de generar el HTML
+
+```typescript
+const template = `
+  <html>
+    <body>
+      <h1>Hello ${user.first_name} ${user.last_name}</h1>
+      <p>Click <a href="${ link }">here</a> to activate your account.</p>
+    </body>
+  </html>`;
+const htmlBody = ejs.render(template);
+```
+
+
+## 7 - Almacenamiento inseguro
+
+La vulnerabilidad sucede porque se guardan las contrasenas en texto plano en la base de datos. Esto es inseguro ya que si un atacante obtiene acceso a la base de datos, podría obtener las contrasenas de los usuarios. 
+
+Además en el endpoint `auth/login` cuando el usuario ingresa sus credenciales, el endpoint devuelve en la respuesta su contrasena. 
+
+**Componente afecado:**
+`src/routes/auth.routes.ts`
+
+**Endpoint afectado**
+`http://localhost:5000/auth/login`
+
+**PoC**
+En postman hacer una solicitud `POST`
+`http://localhost:5000/auth/login` mandar el siguiente body:
+```json
+{
+"email": "test@example.local",
+"password": "password"
+}
+```
+Respuesta:
+
+
+**Fix** 
+En `authService` se importo la librería de bcrypt para hasear las contrasenas.
+
+En la variable `SALT_ROUNDS` ponemos la cantidad de veces que se debe pasar por la función hash = 10. 
+
+```typescript
+static async createUser(user: User) {
+    const existing = await db<UserRow>('users')
+      .where({ username: user.username })
+      .orWhere({ email: user.email })
+      .first();
+    if (existing) throw new Error('User already exists with that username or email');
+    // create invite token
+    //Hash de password
+    const hashedPassword = await bcrypt.hash(user.password, SALT_ROUNDS); 
+    
+    const invite_token = crypto.randomBytes(6).toString('hex');
+    const invite_token_expires = new Date(Date.now() + INVITE_TTL);
+    await db<UserRow>('users')
+      .insert({
+        username: user.username,
+        password: hashedPassword, // Guardado de la contrasena hasheada.
+        email: user.email,
+        first_name: user.first_name,
+        last_name:  user.last_name,
+        invite_token,
+        invite_token_expires,
+        activated: false
+      });
+```
+
+Además se siguio la misma táctica en las métodos `sendResetPasswordEmail` y `setPassword`
