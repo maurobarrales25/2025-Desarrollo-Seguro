@@ -92,11 +92,8 @@ class InvoiceService {
       // send the error to the standard output
       console.error('Error reading receipt file:', error);
       throw new Error('Receipt not found');
-
     } 
-
   };
-
 };
 
 export default InvoiceService;
