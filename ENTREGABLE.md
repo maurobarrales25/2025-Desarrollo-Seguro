@@ -115,6 +115,12 @@ Siguiendo los siguientes pasos se puede reproducir la vulnerabilidad:
 ![SSRF](image-1.png)
 
 **Fix**
+Para eliminar esta vulnerabilidad, se implementó una validación del lado del servidor basada en una lista blanca (allowlist) de destinos permitidos. El sistema ya no confía en la entrada del usuario para construir la URL, sino que la usa como un identificador para seleccionar una URL segura y predefinida.
+
+1.  Se definió un objeto constante (`PAYMENT_GATEWAY_URLS`) que funciona como un diccionario, mapeando identificadores de marcas de tarjeta permitidas (ej: `"visa"`) a sus URLs de servicio completas y seguras (ej: `'http://visa-payments.internal-api/pay'`).
+2.  Se modificó la función `setPaymentCard` para que, en lugar de concatenar el `paymentBrand` del usuario, lo utilice como una clave para buscar en el objeto `PAYMENT_GATEWAY_URLS`.
+3.  Se añadió una validación explícita: si el `paymentBrand` proporcionado por el usuario no existe como clave en la lista blanca, la petición es rechazada con un error `400 Bad Request` y no se realiza ninguna llamada de red.
+
 
 ## 4 - Path Traversal
 
