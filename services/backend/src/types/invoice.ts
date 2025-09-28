@@ -1,6 +1,6 @@
 export interface Invoice {
-    id: string;
-    userId: string;
+    id: number;     //cambio a number
+    userId: number; //cambio a number
     amount: number;
     dueDate: Date;
     status: string;

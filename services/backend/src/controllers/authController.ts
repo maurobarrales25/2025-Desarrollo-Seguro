@@ -13,9 +13,9 @@ const ping = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 const login = async (req: Request, res: Response, next: NextFunction) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;     // cambio a email
   try {
-    const user = await AuthService.authenticate(username, password);
+    const user = await AuthService.authenticate(email, password);   // cambio a email 
     const token = await AuthService.generateJwt(user.id);
     res.json({ token, user });
   } catch (err) {

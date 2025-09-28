@@ -5,6 +5,8 @@ import AuthService from '../../src/services/authService';
 import db from '../../src/db';
 import { User } from '../../src/types/user';
 
+import config from '../../src/config';
+
 jest.mock('../../src/db')
 const mockedDb = db as jest.MockedFunction<typeof db>
 
@@ -27,7 +29,7 @@ describe('AuthService.generateJwt', () => {
 
   it('createUser', async () => {
     const user  = {
-      id: 'user-123',
+      id: 5555,         //cambio de string a nuemero
       email: 'a@a.com',
       password: 'password123',
       first_name: 'First',
@@ -76,7 +78,7 @@ describe('AuthService.generateJwt', () => {
 
   it('createUser already exist', async () => {
     const user  = {
-      id: 'user-123',
+      id: 5555,         //cambio de string a nuemero
       email: 'a@a.com',
       password: 'password123',
       first_name: 'First',
@@ -96,7 +98,7 @@ describe('AuthService.generateJwt', () => {
 
   it('updateUser', async () => {
     const user  = {
-      id: 'user-123',
+      id: 5555,         //cambio de string a nuemero
       email: 'a@b.com',
       password: 'newpassword123',
       first_name: 'NewFirst',
@@ -125,7 +127,7 @@ describe('AuthService.generateJwt', () => {
 
   it('updateUser not found', async () => {
     const user  = {
-      id: 'user-123',
+      id: 5555,         //cambio de string a nuemero,
       email: 'a@a.com',
       password: 'password123',
       first_name: 'First',
@@ -283,7 +285,7 @@ describe('AuthService.generateJwt', () => {
 
   it('setInitialPassword', async () => {
     const password = 'whatawonderfulpassword';
-    const user_id = 'user-123';
+    const user_id =  5555;         //cambio de string a nuemero'user-123';
     const token = 'invite-token';
     // Mock the database row
     const mockRow = {
@@ -336,7 +338,7 @@ describe('AuthService.generateJwt', () => {
   });
 
   it('generateJwt', () => {
-    const userId = 'abcd-1234';
+    const userId = 5555;
     const token = AuthService.generateJwt(userId);
 
     // token should be a non-empty string
@@ -344,7 +346,7 @@ describe('AuthService.generateJwt', () => {
     expect(token.length).toBeGreaterThan(0);
 
     // verify the token decodes to our payload
-    const decoded = jwt.verify(token,"secreto_super_seguro");
+    const decoded = jwt.verify(token, config.jwt.secret);
     expect((decoded as any).id).toBe(userId);
   });
 
