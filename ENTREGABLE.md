@@ -18,7 +18,7 @@ En la función getReceipt que se encuentra en invoiceService, los parámetros st
 class InvoiceService {
   static async list( userId: number, status?: string, operator?: string): Promise<Invoice[]> {
     let q = db<InvoiceRow>('invoices').where({ userId: userId });
-    if (status) q = q.andWhereRaw(" status "+ operator + " '"+ status +"'");                    // sql injection
+    if (status) q = q.andWhereRaw(" status "+ operator + " '"+ status +"'");                    
     const rows = await q.select();
     const invoices = rows.map(row => ({
       id: row.id,
@@ -178,7 +178,6 @@ const requestFilePath = path.join(INVOICES_DIRECTORY, pdfName);
  Se verifica usando startsWith() que la ruta de requestFilePath, siempre coincida con el directorio actual, de los contrario se rechaza la solicitud. 
 
 
-
 ```typescript
 static async getReceipt(
     invoiceId: number,   // cambio a number
@@ -193,7 +192,7 @@ static async getReceipt(
 
     const requestFilePath = path.join(INVOICES_DIRECTORY, pdfName)
 
-    if (!requestFilePath.startsWith(INVOICES_DIRECTORY)) {
+    if (!requestFilePath.startsWith(INVOICES_DIRECTORY)) { //fix
       throw new Error('Error, no puede acceder fuera del directorio predeterminado'); // Aviso de error
     }
 
