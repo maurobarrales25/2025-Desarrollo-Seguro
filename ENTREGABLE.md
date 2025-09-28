@@ -74,6 +74,12 @@ Siguiendo los siguientes pasos se puede reproducir la vulnerabilidad:
 12. Hacer refresh a la url y intentar entrar a http://localhost:3000/home 
 
 **Fix**
+Externalizamos el secreto del código fuente, utilizando variables de entorno.
+  1.  Creamos un archivo `.env` en el directorio del backend (`services/backend`) para almacenar el `JWT_SECRET` fuera del control de versiones.
+  2.  Se verificó que el archivo `.gitignore` incluyera una entrada para `.env`, asegurando que este archivo nunca sea commiteado al repositorio de Git.
+  3.  Se implementó un módulo de configuración centralizado (`src/config/index.ts`) encargado de cargar las variables de entorno al iniciar la aplicación, utilizando la librería `dotenv`.
+  4.  Se refactorizaron todos los archivos que utilizaban el secreto hardcodeado (`jwt.ts`, `auth.middleware.ts`, `authService.test.ts`) para que importaran el secreto desde el módulo de configuración central, eliminando por completo el valor del código fuente.
+
 
 ## 3 - Server Side Request Fogery - SSRF
 
