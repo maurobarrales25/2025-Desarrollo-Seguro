@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
+import * as bcrypt from 'bcrypt';
 
 import AuthService from '../../src/services/authService';
 import db from '../../src/db';
@@ -18,6 +19,13 @@ const mockedNodemailer = nodemailer as jest.Mocked<typeof nodemailer>;
 mockedNodemailer.createTransport = jest.fn().mockReturnValue({
   sendMail: jest.fn().mockResolvedValue({ success: true }),
 });
+
+// mock del bcrypt
+jest.mock('bcrypt', () => ({
+  hash: jest.fn().mockResolvedValue('MOCKED_HASHED_PASSWORD'),
+  // Asegúrate de mockear también la función que uses para autenticar
+  compare: jest.fn().mockResolvedValue(true), 
+}));
 
 describe('AuthService.generateJwt', () => {
   const OLD_ENV = process.env;
@@ -58,7 +66,7 @@ describe('AuthService.generateJwt', () => {
     // Verify the database calls
     expect(insertChain.insert).toHaveBeenCalledWith({
       email: user.email,
-      password: user.password,
+      password: 'MOCKED_HASHED_PASSWORD',
       first_name: user.first_name,
       last_name: user.last_name,
       username: user.username,
@@ -264,7 +272,7 @@ describe('AuthService.generateJwt', () => {
     await AuthService.resetPassword(token, newPassword);
     expect(getUserChain.where).toHaveBeenCalledWith('reset_password_token', token);
     expect(updateChain.update).toHaveBeenCalledWith({
-      password: newPassword,
+      password: 'MOCKED_HASHED_PASSWORD',
       reset_password_token: null,
       reset_password_expires: null
     });
@@ -316,7 +324,7 @@ describe('AuthService.generateJwt', () => {
 
     // Verify the database calls
     expect(updateChain.update).toHaveBeenCalledWith({
-      password: password,
+      password: 'MOCKED_HASHED_PASSWORD',
       invite_token: null,
       invite_token_expires: null
     });

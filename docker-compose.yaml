@@ -28,6 +28,7 @@ services:
       - SMTP_PORT=1025
       - SMTP_USER=seed
       - SMTP_PASS=seed
+      - JWT_SECRET=un_secreto_fuerte_y_dificil_de_adivinar_!@#1234
     restart: unless-stopped
     depends_on:
       postgres:
@@ -49,7 +50,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: jwt_api
     ports:
-      - "5432:5432"
+      - "5432:5432"  
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped

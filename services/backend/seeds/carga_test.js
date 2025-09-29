@@ -1,14 +1,20 @@
 /**
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> } 
+ * 
  */
+const bcrypt = require('bcryptjs');
+
 exports.seed = async function(knex) {
+  await knex.raw('TRUNCATE TABLE "invoices", "users" RESTART IDENTITY CASCADE');
+  const defaultPassword = 'password';
+  const hashedPassword = await bcrypt.hash(defaultPassword, 10)
 
   await knex('users').insert({
     id: 1,
     username: 'test',
     email: 'test@example.local',
-    password: 'password',
+    password: hashedPassword,
     first_name: 'Test',
     last_name: 'User',
     activated: true,
@@ -22,7 +28,7 @@ exports.seed = async function(knex) {
     id: 2,
     username: 'prod',
     email: 'prod@example.local',
-    password: 'password',
+    password: hashedPassword,
     first_name: 'Prod',
     last_name: 'User',
     activated: true,
