@@ -2,7 +2,10 @@
 
 **Aclaración**
 
-Varias de estas vulnerabilidades se explotaron utilizando el user Test, que tiene el userId: 1
+1. Varias de estas vulnerabilidades se explotaron utilizando el user Test, que tiene el userId: 1
+2. Para correr con la variable de entorno ejecutar en la terminal: `export JWT_SECRET="mi_jwt_secret_super_seguro_2024" &&  docker compose up -d`
+El archivo con la variable de entorno debe de estar ubicado en services/backend/.env: con el siguiente secrfet:
+`JWT_SECRET=varaible de entorno`
 
 ## 1 - Inyección SQL 
 
