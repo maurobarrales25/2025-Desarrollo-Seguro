@@ -437,6 +437,10 @@ it('createUser should sanitize malicious SSTI input', async () => {
 });
 ```
 
+Prueba con la misma request anterior: 
+
+![SSTIFIX](image-4.png)
+
 ## 7 - Almacenamiento inseguro
 
 La vulnerabilidad sucede porque se guardan las contrasenas en texto plano en la base de datos. Esto es inseguro ya que si un atacante obtiene acceso a la base de datos, podría obtener las contrasenas de los usuarios. 
