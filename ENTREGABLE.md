@@ -46,6 +46,39 @@ Siguiendo los siguientes pasos se puede reproducir la vulnerabilidad:
 
 **Fix**
 
+Para arreglar la vulnerabilidad dejamos de concatenar los strings en la consulta. Lo que hicimos fue usar Knex para manejar los datos.
+Realizamos estos 2 cambios:
+1- Validamos la entrada del operador creando una lista con los operadores permitidos, de no ser un operador valido la consulta no se procesa.
+2- Usamos consultas parametrizadas cambiando el `.andWhereRaw()` por un `.andWhere()`. Con este cambio no se va a ejecutar directamente lo que ingresa el usuario.
+
+```typescript
+class InvoiceService {
+  static async list(userId: number, status?: string, operator?: string): Promise<Invoice[]> {
+    const q = db<InvoiceRow>('invoices').where({ userId: userId });
+
+    if (status && operator) {
+      const allowedOperators = ['=', '!=', '>', '<', '>=', '<='];
+      if (allowedOperators.includes(operator)) {
+        q.andWhere('status', operator, status);
+      } else {
+        throw new Error('Operador no válido');
+      }
+    }
+    
+    const rows = await q.select();
+    const invoices = rows.map(row => ({
+      id: row.id,
+      userId: row.userId,
+      amount: row.amount,
+      dueDate: row.dueDate,
+      status: row.status
+    } as Invoice));
+
+    return invoices;
+  }
+}
+```
+
 ## 2 - Hard Coded Credentials
 
 **Justificación**
