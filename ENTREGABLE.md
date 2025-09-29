@@ -1,4 +1,5 @@
-# Consigna Práctica 2 - Mitigación de Vulnerabilidades de CWE
+# Consigna Práctica 2 - Mitigación de Vulnerabilidades de CWE 
+**Juliana Hernández, Micaela Procofio y Mauro Barrales**
 
 **Aclaración**
 
