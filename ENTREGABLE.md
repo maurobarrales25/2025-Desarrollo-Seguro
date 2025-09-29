@@ -415,4 +415,8 @@ static async createUser(user: User) {
       });
 ```
 
-Además se siguio la misma táctica en las métodos `sendResetPasswordEmail` y `setPassword`
+Además se siguio la misma táctica en las métodos `sendResetPasswordEmail` y `setPassword` y en los métodos de `authService.test.ts`
+
+Prueba con postman de nueva request:
+
+![hashedPasswords](image-2.png)
