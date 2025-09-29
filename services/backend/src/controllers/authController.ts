@@ -27,7 +27,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
 const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
   const { email } = req.body;
   try {
-    await AuthService.sendResetPasswordEmail(email, config.frontend.url);
+    await AuthService.sendResetPasswordEmail(email);
     // 204: no content, but client knows email was sent
     res.sendStatus(204);
   } catch (err) {

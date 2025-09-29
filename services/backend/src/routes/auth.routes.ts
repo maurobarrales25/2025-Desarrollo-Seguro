@@ -16,5 +16,6 @@ router.post('/reset-password', routes.resetPassword);
 // POST /auth/set-password
 router.post('/set-password', routes.setPassword);
 
+router.post('/register', routes.createUser); 
 
 export default router;
