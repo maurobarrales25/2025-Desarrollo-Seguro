@@ -95,21 +95,19 @@ class AuthService {
     return user;
   }
 
-  static async sendResetPasswordEmail(email: string, newPassword: string) {
+  static async sendResetPasswordEmail(email: string) {
     const user = await db<UserRow>('users')
       .where({ email })
       .andWhere('activated', true)
       .first();
     if (!user) throw new Error('No user with that email or not activated');
 
-    const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
     const token = crypto.randomBytes(6).toString('hex');
     const expires = new Date(Date.now() + RESET_TTL);
 
     await db('users')
       .where({ id: user.id })
       .update({
-        password: hashedPassword,
         reset_password_token: token,
         reset_password_expires: expires
       });
@@ -139,10 +137,12 @@ class AuthService {
       .first();
     if (!row) throw new Error('Invalid or expired reset token');
 
+    const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS); 
+
     await db('users')
       .where({ id: row.id })
       .update({
-        password: newPassword,
+        password: hashedPassword,
         reset_password_token: null,
         reset_password_expires: null
       });
