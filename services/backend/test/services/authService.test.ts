@@ -77,12 +77,62 @@ describe('AuthService.generateJwt', () => {
 
     expect(nodemailer.createTransport).toHaveBeenCalled();
     expect(nodemailer.createTransport().sendMail).toHaveBeenCalledWith({
+      from: "info@example.com",
       to: user.email,
       subject: 'Activate your account',
-      html: expect.stringContaining('Click <a href="')
+      html: expect.stringContaining('Hello First Last')
     });
   }
   );
+
+  it('createUser should sanitize malicious SSTI input', async () => {
+    const user  = {
+      id: 5556,
+      email: 'malicious@test.com',
+      password: 'password123',
+      first_name: '<%= "evil" %>',
+      last_name: '<script>alert(1)</script>',
+      username: 'malicious_user',
+    } as User;
+
+    // mock no user exists
+    const selectChain = {
+      where: jest.fn().mockReturnThis(),
+      orWhere: jest.fn().mockReturnThis(),
+      first: jest.fn().mockResolvedValue(null)
+    };
+    // Mock the database insert
+    const insertChain = {
+      returning: jest.fn().mockResolvedValue([user]),
+      insert: jest.fn().mockReturnThis()
+    };
+    mockedDb
+    .mockReturnValueOnce(selectChain as any)
+    .mockReturnValueOnce(insertChain as any);
+
+    // Call the method to test
+    await AuthService.createUser(user);
+
+    // Verify that malicious input was sanitized
+    expect(insertChain.insert).toHaveBeenCalledWith({
+      email: user.email,
+      password: 'MOCKED_HASHED_PASSWORD',
+      first_name: '&lt;%= &quot;evil&quot; %&gt;',
+      last_name: '&lt;script&gt;alert(1)&lt;&#x2F;script&gt;',
+      username: user.username,
+      activated: false,
+      invite_token: expect.any(String),
+      invite_token_expires: expect.any(Date)
+    });
+
+    // Verify that the email contains escaped content, not the raw malicious input
+    expect(nodemailer.createTransport().sendMail).toHaveBeenCalledWith({
+      from: "info@example.com",
+      to: user.email,
+      subject: 'Activate your account',
+      html: expect.stringContaining('&amp;lt;%= &amp;quot;evil&amp;quot; %&amp;gt;')
+    });
+  });
 
   it('createUser already exist', async () => {
     const user  = {

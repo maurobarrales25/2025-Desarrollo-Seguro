@@ -359,6 +359,65 @@ const template = `
 const htmlBody = ejs.render(template);
 ```
 
+**Fix**
+
+Para solucionar esta vulnerabilidad SSTI, se implementaron las siguientes medidas de seguridad:
+
+1. **Sanitización de entrada:** Se agregó la librería `validator` para escapar caracteres especiales en los campos `first_name` y `last_name`:
+
+```typescript
+import validator from 'validator';
+
+// Validar y sanitizar entrada del usuario para prevenir SSTI
+const sanitizedFirstName = validator.escape(user.first_name || '').trim();
+const sanitizedLastName = validator.escape(user.last_name || '').trim();
+```
+
+2. **Validación de longitud:** Se implementó validación para limitar la longitud de los nombres:
+
+```typescript
+if (sanitizedFirstName.length > 50 || sanitizedLastName.length > 50) {
+  throw new Error('First name and last name must be less than 50 characters');
+}
+```
+
+3. **Template seguro con parámetros EJS:** Se cambió la interpolación directa de strings por parámetros seguros de EJS:
+
+```typescript
+const template = `
+  <html>
+    <body>
+      <h1>Hello <%= firstName %> <%= lastName %></h1>
+      <p>Click <a href="<%= activationLink %>">here</a> to activate your account.</p>
+    </body>
+  </html>`;
+
+const htmlBody = ejs.render(template, {
+  firstName: sanitizedFirstName,
+  lastName: sanitizedLastName,
+  activationLink: link
+});
+```
+
+4. **Aplicación en múltiples métodos:** Se aplicó la misma sanitización en el método `updateUser` para consistencia.
+
+5. **Pruebas de seguridad:** Se implementó una prueba específica que verifica que la entrada maliciosa sea correctamente sanitizada:
+
+```typescript
+it('createUser should sanitize malicious SSTI input', async () => {
+  const user = {
+    first_name: '<%= "evil" %>',
+    last_name: '<script>alert(1)</script>',
+    // ...
+  };
+  
+  expect(insertChain.insert).toHaveBeenCalledWith({
+    first_name: '&lt;%= &quot;evil&quot; %&gt;',
+    last_name: '&lt;script&gt;alert(1)&lt;&#x2F;script&gt;',
+    // ...
+  });
+});
+```
 
 ## 7 - Almacenamiento inseguro
 

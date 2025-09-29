@@ -6,6 +6,7 @@ import { User,UserRow } from '../types/user';
 import jwtUtils from '../utils/jwt';
 import ejs from 'ejs';
 import bcrypt from 'bcrypt';
+import validator from 'validator';
 
 const SALT_ROUNDS = 10;
 const RESET_TTL = 1000 * 60 * 60;         // 1h
@@ -19,6 +20,16 @@ class AuthService {
       .orWhere({ email: user.email })
       .first();
     if (existing) throw new Error('User already exists with that username or email');
+    
+    // Validate and sanitize user input to prevent SSTI
+    const sanitizedFirstName = validator.escape(user.first_name || '').trim();
+    const sanitizedLastName = validator.escape(user.last_name || '').trim();
+    
+    // Additional validation for name fields
+    if (sanitizedFirstName.length > 50 || sanitizedLastName.length > 50) {
+      throw new Error('First name and last name must be less than 50 characters');
+    }
+    
     // create invite token
     //Hash de password
     const hashedPassword = await bcrypt.hash(user.password, SALT_ROUNDS); 
@@ -30,8 +41,8 @@ class AuthService {
         username: user.username,
         password: hashedPassword,
         email: user.email,
-        first_name: user.first_name,
-        last_name:  user.last_name,
+        first_name: sanitizedFirstName,
+        last_name: sanitizedLastName,
         invite_token,
         invite_token_expires,
         activated: false
@@ -47,14 +58,20 @@ class AuthService {
     });
     const link = `${process.env.FRONTEND_URL}/activate-user?token=${invite_token}&username=${user.username}`;
    
+    // Use EJS template with safe variable substitution instead of string interpolation
     const template = `
       <html>
         <body>
-          <h1>Hello ${user.first_name} ${user.last_name}</h1>
-          <p>Click <a href="${ link }">here</a> to activate your account.</p>
+          <h1>Hello <%= firstName %> <%= lastName %></h1>
+          <p>Click <a href="<%= activationLink %>">here</a> to activate your account.</p>
         </body>
       </html>`;
-    const htmlBody = ejs.render(template);
+    
+    const htmlBody = ejs.render(template, {
+      firstName: sanitizedFirstName,
+      lastName: sanitizedLastName,
+      activationLink: link
+    });
     
     await transporter.sendMail({
       from: "info@example.com",
@@ -69,14 +86,24 @@ class AuthService {
       .where({ id: user.id })
       .first();
     if (!existing) throw new Error('User not found');
+    
+    // Validate and sanitize user input to prevent SSTI
+    const sanitizedFirstName = validator.escape(user.first_name || '').trim();
+    const sanitizedLastName = validator.escape(user.last_name || '').trim();
+    
+    // Additional validation for name fields
+    if (sanitizedFirstName.length > 50 || sanitizedLastName.length > 50) {
+      throw new Error('First name and last name must be less than 50 characters');
+    }
+    
     await db<UserRow>('users')
       .where({ id: user.id })
       .update({
         username: user.username,
         password: user.password,
         email: user.email,
-        first_name: user.first_name,
-        last_name: user.last_name
+        first_name: sanitizedFirstName,
+        last_name: sanitizedLastName
       });
     return existing;
   }
