@@ -41,14 +41,16 @@ Siguiendo los siguientes pasos se puede reproducir la vulnerabilidad:
 2- Ejecutar el siguiente comando: 
 `curl -X GET 'http://localhost:5000/invoices?operator==&status=%27%20OR%201=1%20--' -H 'Authorization: Bearer <token generado anteriormente>'
 `
-- 3- Respuesta con JSON con datos de las facturas:
+3- Respuesta con JSON con datos de las facturas:
 ![sqlinjection](image.png)
 
 **Fix**
 
 Para arreglar la vulnerabilidad dejamos de concatenar los strings en la consulta. Lo que hicimos fue usar Knex para manejar los datos.
 Realizamos estos 2 cambios:
+
 1- Validamos la entrada del operador creando una lista con los operadores permitidos, de no ser un operador valido la consulta no se procesa.
+
 2- Usamos consultas parametrizadas cambiando el `.andWhereRaw()` por un `.andWhere()`. Con este cambio no se va a ejecutar directamente lo que ingresa el usuario.
 
 ```typescript
