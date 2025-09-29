@@ -38,13 +38,48 @@ Esto es vulnerable ya que se utiliza directamente la concatenación de strings.
 Siguiendo los siguientes pasos se puede reproducir la vulnerabilidad:
 
 1- Entrar en la terminal de la computadora al servicio de backend
+
 2- Ejecutar el siguiente comando: 
 `curl -X GET 'http://localhost:5000/invoices?operator==&status=%27%20OR%201=1%20--' -H 'Authorization: Bearer <token generado anteriormente>'
 `
-- 3- Respuesta con JSON con datos de las facturas:
+
+3- Respuesta con JSON con datos de las facturas:
 ![sqlinjection](image.png)
 
 **Fix**
+
+Para arreglar la vulnerabilidad dejamos de concatenar los strings en la consulta. Lo que hicimos fue usar Knex para manejar los datos.
+Realizamos estos 2 cambios:
+
+1- Validamos la entrada del operador creando una lista con los operadores permitidos, de no ser un operador valido la consulta no se procesa.
+
+2- Usamos consultas parametrizadas cambiando el `.andWhereRaw()` por un `.andWhere()`. Con este cambio no se va a ejecutar directamente lo que ingresa el usuario.
+
+```typescript
+static async list(userId: number, status?: string, operator?: string): Promise<Invoice[]> {
+    const q = db<InvoiceRow>('invoices').where({ userId: userId });
+//  if (status) q = q.andWhereRaw(" status "+ operator + " '"+ status +"'");                    // sql injection
+    if (status && operator) {
+      const allowedOperators = ['=', '!=', '>', '<', '>=', '<='];
+      if (allowedOperators.includes(operator)) {
+        q.andWhere('status', operator, status);
+      } else {
+        throw new Error('Operador no válido');
+      }
+    }
+    
+    const rows = await q.select();
+    const invoices = rows.map(row => ({
+      id: row.id,
+      userId: row.userId,
+      amount: row.amount,
+      dueDate: row.dueDate,
+      status: row.status
+    } as Invoice));
+
+    return invoices;
+  }
+```
 
 ## 2 - Hard Coded Credentials
 
