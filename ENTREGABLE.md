@@ -360,6 +360,23 @@ const template = `
 const htmlBody = ejs.render(template);
 ```
 
+**PoC**
+En la terminal mandar el siguiente request. 
+```bash
+curl -v -X POST http://localhost:5001/users \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "test_ssti_fixed6",
+    "email": "test_fixed6@example.com", 
+    "password": "password123",
+    "first_name": "<%= 9*9 %>",
+    "last_name": "usuario_test6"
+  }'
+```
+En `http://localhost:8025/`  revisar el inbox y aparece:
+
+![SSTI](image-3.png)
+
 **Fix**
 
 Para solucionar esta vulnerabilidad SSTI, se implementaron las siguientes medidas de seguridad:
