@@ -29,6 +29,7 @@ services:
       - SMTP_USER=seed
       - SMTP_PASS=seed
       - JWT_SECRET=un_secreto_fuerte_y_dificil_de_adivinar_!@#1234
+      - FRONTEND_URL=http://localhost:3000
     restart: unless-stopped
     depends_on:
       postgres:
