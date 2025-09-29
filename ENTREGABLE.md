@@ -74,6 +74,12 @@ Siguiendo los siguientes pasos se puede reproducir la vulnerabilidad:
 12. Hacer refresh a la url y intentar entrar a http://localhost:3000/home 
 
 **Fix**
+Externalizamos el secreto del código fuente, utilizando variables de entorno.
+  1.  Creamos un archivo `.env` en el directorio del backend (`services/backend`) para almacenar el `JWT_SECRET` fuera del control de versiones.
+  2.  Se verificó que el archivo `.gitignore` incluyera una entrada para `.env`, asegurando que este archivo nunca sea commiteado al repositorio de Git.
+  3.  Se implementó un módulo de configuración centralizado (`src/config/index.ts`) encargado de cargar las variables de entorno al iniciar la aplicación, utilizando la librería `dotenv`.
+  4.  Se refactorizaron todos los archivos que utilizaban el secreto hardcodeado (`jwt.ts`, `auth.middleware.ts`, `authService.test.ts`) para que importaran el secreto desde el módulo de configuración central, eliminando por completo el valor del código fuente.
+
 
 ## 3 - Server Side Request Fogery - SSRF
 
@@ -115,6 +121,12 @@ Siguiendo los siguientes pasos se puede reproducir la vulnerabilidad:
 ![SSRF](image-1.png)
 
 **Fix**
+Para eliminar esta vulnerabilidad, se implementó una validación del lado del servidor basada en una lista blanca (allowlist) de destinos permitidos. El sistema ya no confía en la entrada del usuario para construir la URL, sino que la usa como un identificador para seleccionar una URL segura y predefinida.
+
+1.  Se definió un objeto constante (`PAYMENT_GATEWAY_URLS`) que funciona como un diccionario, mapeando identificadores de marcas de tarjeta permitidas (ej: `"visa"`) a sus URLs de servicio completas y seguras (ej: `'http://visa-payments.internal-api/pay'`).
+2.  Se modificó la función `setPaymentCard` para que, en lugar de concatenar el `paymentBrand` del usuario, lo utilice como una clave para buscar en el objeto `PAYMENT_GATEWAY_URLS`.
+3.  Se añadió una validación explícita: si el `paymentBrand` proporcionado por el usuario no existe como clave en la lista blanca, la petición es rechazada con un error `400 Bad Request` y no se realiza ninguna llamada de red.
+
 
 ## 4 - Path Traversal
 
