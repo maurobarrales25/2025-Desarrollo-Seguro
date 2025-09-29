@@ -38,9 +38,11 @@ Esto es vulnerable ya que se utiliza directamente la concatenación de strings.
 Siguiendo los siguientes pasos se puede reproducir la vulnerabilidad:
 
 1- Entrar en la terminal de la computadora al servicio de backend
+
 2- Ejecutar el siguiente comando: 
 `curl -X GET 'http://localhost:5000/invoices?operator==&status=%27%20OR%201=1%20--' -H 'Authorization: Bearer <token generado anteriormente>'
 `
+
 3- Respuesta con JSON con datos de las facturas:
 ![sqlinjection](image.png)
 
